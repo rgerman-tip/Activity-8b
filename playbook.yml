@@ -1,0 +1,45 @@
+---
+- name: Install Docker for Ubuntu and CentOS
+  hosts: hosts
+  become: yes
+  tasks:
+    - name: Import docker_ubuntu for installation
+      tags: docker-ubuntu
+      import_role: name=docker-ubuntu
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Import docker_centos for installation
+      tags: docker-centos
+      import_role: name=docker-centos
+      when: ansible_distribution == "CentOS"
+
+    - name: Add docker group to the current user
+      tags: add_user
+      group:
+        name: docker
+        state: present
+
+    - name: Add user to docker group
+      user: 
+        name: ronel_23
+        group: docker
+        append: yes
+
+    - name: Disable firewall for Ubuntu
+      service: 
+        name: ufw
+        state: stopped
+        enabled: no
+      when: ansible_distribution == "Ubuntu" 
+
+    - name: Disable firewall for CentOS
+      service:
+        name: firewalld
+        state: stopped
+        enabled: no
+      when: ansible_distribution == "CentOS"
+
+    - name: Install elk stack using docker image
+      import_role: name=docker
+      tags: docker
+
